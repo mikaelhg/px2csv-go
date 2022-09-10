@@ -9,16 +9,18 @@ import (
 
 var (
 	PxLexer = lexer.MustSimple([]lexer.SimpleRule{
-		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `String`, Pattern: `"(?:\\.|[^"])*"`},
+		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `Integer`, Pattern: `\d+`},
 		{Name: `Punct`, Pattern: `[][=;(),"]`},
-		{Name: `whitespace`, Pattern: `\s+`},
 		{Name: `EOL`, Pattern: `[\n\r]+`},
+		{Name: `whitespace`, Pattern: `\s+`},
 	})
 	PxParser = participle.MustBuild[PxFileHeader](
 		participle.Lexer(PxLexer),
 		participle.Unquote("String"),
+		participle.Elide("whitespace", "EOL"),
+		// participle.UseLookahead(4),
 	)
 )
 
@@ -31,7 +33,7 @@ func Parse(r io.Reader) (*PxFileHeader, error) {
 }
 
 type PxKeyword struct {
-	Keyword    string    `parser:" @Ident "`
+	Keyword    string    `parser:" ( (?! 'DATA' ) @Ident )! "`
 	Language   *string   `parser:"( '[' @Ident ']' )?"`
 	Specifiers *[]string `parser:"( '(' @String ( ',' @String )* ')' )?"`
 }
@@ -44,7 +46,7 @@ type PxValue struct {
 }
 
 type PxTimeVal struct {
-	Units string    `parser:" 'TLIST(' @('A1' | 'H1' | 'Q1' | 'M1' | 'W1' ) "`
+	Units string    `parser:" 'TLIST' '(' @('A1' | 'H1' | 'Q1' | 'M1' | 'W1' ) "`
 	Times *[]string `parser:" ( ',' @String ( ',' @String )* )? ')' ( ',' @String )* "`
 }
 
@@ -54,5 +56,5 @@ type PxRow struct {
 }
 
 type PxFileHeader struct {
-	Row PxRow `parser:"( @@ )* 'DATA=' "`
+	Row PxRow `parser:"( @@ )* 'DATA' "`
 }
