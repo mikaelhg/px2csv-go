@@ -23,8 +23,7 @@ var (
 )
 
 type PxKeyword struct {
-	Keyword string `parser:" ( (?! 'DATA' ) @Ident )! "`
-	// Keyword    string    `parser:" @Ident  "`
+	Keyword    string    `parser:" ( (?! 'DATA' ) @Ident )! "`
 	Language   *string   `parser:"( '[' @Ident ']' )?"`
 	Specifiers *[]string `parser:"( '(' @String ( ',' @String )* ')' )?"`
 }

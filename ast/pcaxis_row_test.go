@@ -7,7 +7,15 @@ import (
 
 	"testing"
 
-	"github.com/alecthomas/repr"
+	"github.com/alecthomas/participle/v2"
+)
+
+var (
+	rowParser = participle.MustBuild[ast.PxRow](
+		participle.Lexer(ast.PxLexer),
+		participle.Unquote("String"),
+		participle.Elide("whitespace", "EOL"),
+	)
 )
 
 func TestPxRowWithLang(t *testing.T) {
@@ -30,8 +38,8 @@ func TestPxRowWithLang(t *testing.T) {
 		},
 	}
 
-	r, err := ast.PxParser.ParseString("", text)
-	repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
+	r, err := rowParser.ParseString("", text)
+	// repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
 	}
@@ -57,8 +65,8 @@ func TestPxRow(t *testing.T) {
 		},
 	}
 
-	r, err := ast.PxParser.ParseString("", text)
-	repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
+	r, err := rowParser.ParseString("", text, participle.AllowTrailing(true))
+	// repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
 	}

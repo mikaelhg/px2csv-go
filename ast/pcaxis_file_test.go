@@ -4,11 +4,11 @@ import (
 	"os"
 
 	"github.com/mikaelhg/gpcaxis/ast"
+	"gotest.tools/v3/assert"
 
 	"testing"
 
 	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/repr"
 )
 
 func TestPxFileHeader(t *testing.T) {
@@ -18,10 +18,12 @@ func TestPxFileHeader(t *testing.T) {
 	}
 	defer r.Close()
 	header, err := ast.PxParser.Parse("", r, participle.AllowTrailing(true))
-	repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
+	// repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
 	}
+
+	assert.Check(t, header != nil)
 }
 
 func TestTerminate(t *testing.T) {
@@ -30,10 +32,10 @@ DATA=
 1564581 174000 162000 21 1243095 321486 
 `
 	header, err := ast.PxParser.ParseString("", text, participle.AllowTrailing(true))
-	repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
+	// repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
 	}
 
-	t.Error("yes")
+	assert.Check(t, header != nil)
 }
