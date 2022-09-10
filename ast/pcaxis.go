@@ -10,7 +10,7 @@ var (
 		{Name: `String`, Pattern: `"(?:\\.|[^"])*"`},
 		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `Integer`, Pattern: `\d+`},
-		{Name: `Punct`, Pattern: `[][=;(),"]`},
+		{Name: `Punct`, Pattern: `[][=\-;(),"]`},
 		{Name: `EOL`, Pattern: `[\n\r]+`},
 		{Name: `whitespace`, Pattern: `\s+`},
 	})
@@ -18,7 +18,6 @@ var (
 		participle.Lexer(PxLexer),
 		participle.Unquote("String"),
 		participle.Elide("whitespace", "EOL"),
-		// participle.UseLookahead(5),
 	)
 )
 
@@ -37,7 +36,8 @@ type PxValue struct {
 
 type PxTimeVal struct {
 	Units string    `parser:" 'TLIST' '(' @( 'A1' | 'H1' | 'Q1' | 'M1' | 'W1' ) "`
-	Times *[]string `parser:" ( ',' @String ( ',' @String )* )? ')' ( ',' @String )* "`
+	Range *[]string `parser:" ( ',' @String '-' @String )? ')' "`
+	Times *[]string `parser:" ( ',' @String )* "`
 }
 
 type PxRow struct {
@@ -46,5 +46,5 @@ type PxRow struct {
 }
 
 type PxFileHeader struct {
-	Row []PxRow `parser:"( @@ )* 'DATA' '=' "`
+	Rows []PxRow `parser:"( @@ )* 'DATA' '=' "`
 }
