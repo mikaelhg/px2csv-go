@@ -6,26 +6,24 @@ import (
 )
 
 var (
-	pxLexer = lexer.MustSimple([]lexer.SimpleRule{
-		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z_\d]*`},
+	PxLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `String`, Pattern: `"(?:\\.|[^"])*"`},
 		{Name: `Integer`, Pattern: `\d+`},
-		{Name: `Float`, Pattern: `\d+(?:\.\d+)?`},
-		{Name: "Punct", Pattern: `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`},
-		{Name: "comment", Pattern: `[#;][^\n]*`},
-		{Name: "whitespace", Pattern: `\s+`},
-		{Name: "EOL", Pattern: `[\n\r]+`},
+		{Name: `Punct`, Pattern: `[][=;(),"]`},
+		{Name: `whitespace`, Pattern: `\s+`},
+		{Name: `EOL`, Pattern: `[\n\r]+`},
 	})
 	PxParser = participle.MustBuild[PxFileHeader](
-		participle.Lexer(pxLexer),
+		participle.Lexer(PxLexer),
 		participle.Unquote("String"),
 	)
 )
 
 type PxKeyword struct {
-	Keyword    string     `parser:" @Ident "`
-	Language   *string    `parser:"( '[' @Ident ']' )?"`
-	Specifiers *[]*string `parser:"( '(' @String ( ',' @String )* ')' )?"`
+	Keyword    string    `parser:" @Ident "`
+	Language   *string   `parser:"( '[' @Ident ']' )?"`
+	Specifiers *[]string `parser:"( '(' @String ( ',' @String )* ')' )?"`
 }
 
 type PxValue struct {
