@@ -1,6 +1,8 @@
 package ast
 
 import (
+	"io"
+
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
@@ -20,6 +22,14 @@ var (
 	)
 )
 
+func Parse(r io.Reader) (*PxFileHeader, error) {
+	header, err := PxParser.Parse("", r)
+	if err != nil {
+		return nil, err
+	}
+	return header, nil
+}
+
 type PxKeyword struct {
 	Keyword    string    `parser:" @Ident "`
 	Language   *string   `parser:"( '[' @Ident ']' )?"`
@@ -27,9 +37,15 @@ type PxKeyword struct {
 }
 
 type PxValue struct {
-	Integer *int      `parser:"   @Integer"`
-	String  *string   `parser:"  | @Ident "`
-	List    *[]string `parser:"  | ( @String ( ',' @String )* ) "`
+	Integer *int         `parser:"   @Integer"`
+	Times   *[]PxTimeVal `parser:"  | @@ (',' @@)* "`
+	String  *string      `parser:"  | @Ident "`
+	List    *[]string    `parser:"  | ( @String ( ',' @String )* ) "`
+}
+
+type PxTimeVal struct {
+	Units string    `parser:" 'TLIST(' @('A1' | 'H1' | 'Q1' | 'M1' | 'W1' ) "`
+	Times *[]string `parser:" ( ',' @String ( ',' @String )* )? ')' ( ',' @String )* "`
 }
 
 type PxRow struct {
@@ -38,5 +54,5 @@ type PxRow struct {
 }
 
 type PxFileHeader struct {
-	Row PxRow `parser:"( @@ EOL )* 'DATA=' "`
+	Row PxRow `parser:"( @@ )* 'DATA=' "`
 }

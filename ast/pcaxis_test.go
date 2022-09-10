@@ -1,6 +1,8 @@
 package ast_test
 
 import (
+	"os"
+
 	"github.com/mikaelhg/gpcaxis/ast"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
@@ -17,6 +19,19 @@ var (
 		participle.Unquote("String"),
 	)
 )
+
+func TestPxFileHeader(t *testing.T) {
+	r, err := os.Open("../data/010_kats_tau_101.px")
+	if err != nil {
+		panic(err)
+	}
+	defer r.Close()
+	header, err := ast.PxParser.Parse("", r)
+	repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestPxRowWithLang(t *testing.T) {
 	text := `SUBJECT-AREA[sv]="Besiktningar av personbilar";`
