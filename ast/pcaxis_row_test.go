@@ -1,37 +1,14 @@
 package ast_test
 
 import (
-	"os"
-
 	"github.com/mikaelhg/gpcaxis/ast"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/assert/cmp"
 
 	"testing"
 
-	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/repr"
 )
-
-var (
-	rp = participle.MustBuild[ast.PxRow](
-		participle.Lexer(ast.PxLexer),
-		participle.Unquote("String"),
-	)
-)
-
-func TestPxFileHeader(t *testing.T) {
-	r, err := os.Open("../data/010_kats_tau_101.px")
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-	header, err := ast.PxParser.Parse("", r)
-	repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
-	if err != nil {
-		panic(err)
-	}
-}
 
 func TestPxRowWithLang(t *testing.T) {
 	text := `SUBJECT-AREA[sv]="Besiktningar av personbilar";`
@@ -53,7 +30,7 @@ func TestPxRowWithLang(t *testing.T) {
 		},
 	}
 
-	r, err := rp.ParseString("", text)
+	r, err := ast.PxParser.ParseString("", text)
 	repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
@@ -80,7 +57,7 @@ func TestPxRow(t *testing.T) {
 		},
 	}
 
-	r, err := rp.ParseString("", text)
+	r, err := ast.PxParser.ParseString("", text)
 	repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
 		panic(err)
