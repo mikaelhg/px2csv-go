@@ -2,8 +2,6 @@ package ast_test
 
 import (
 	"github.com/mikaelhg/gpcaxis/ast"
-	"gotest.tools/v3/assert"
-	"gotest.tools/v3/assert/cmp"
 
 	"testing"
 
@@ -20,56 +18,61 @@ var (
 
 func TestPxRowWithLang(t *testing.T) {
 	text := `SUBJECT-AREA[sv]="Besiktningar av personbilar";`
-
 	sv := "sv"
-
-	er := ast.PxRow{
+	expected := ast.PxRow{
 		Keyword: ast.PxKeyword{
-			Keyword:    "SUBJECT-AREA",
-			Language:   &sv,
-			Specifiers: nil,
+			Keyword:  "SUBJECT-AREA",
+			Language: &sv,
 		},
 		Value: ast.PxValue{
-			Integer: nil,
-			String:  nil,
-			List: &[]string{
-				"Besiktningar av personbilar",
+			List: &[]ast.PxStringVal{
+				{
+					Strings: []string{"Besiktningar av personbilar"},
+				},
 			},
 		},
 	}
-
-	r, err := rowParser.ParseString("", text)
-	// repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
-	if err != nil {
-		panic(err)
-	}
-
-	assert.Check(t, cmp.DeepEqual(er, *r))
+	parseRow(t, expected, text)
 }
 
 func TestPxRow(t *testing.T) {
 	text := `SUBJECT-AREA="Besiktningar av personbilar";`
-
-	er := ast.PxRow{
+	expected := ast.PxRow{
 		Keyword: ast.PxKeyword{
-			Keyword:    "SUBJECT-AREA",
-			Language:   nil,
-			Specifiers: nil,
+			Keyword: "SUBJECT-AREA",
 		},
 		Value: ast.PxValue{
-			Integer: nil,
-			String:  nil,
-			List: &[]string{
-				"Besiktningar av personbilar",
+			List: &[]ast.PxStringVal{
+				{
+					Strings: []string{"Besiktningar av personbilar"},
+				},
 			},
 		},
 	}
+	parseRow(t, expected, text)
+}
 
-	r, err := rowParser.ParseString("", text, participle.AllowTrailing(true))
-	// repr.Println(r, repr.Indent("  "), repr.OmitEmpty(false))
-	if err != nil {
-		panic(err)
+func TestMultilineNote(t *testing.T) {
+	text := `NOTE="<A HREF='https://www.stat.fi/til/vtp/rev.html' TARGET=_blank>Tietojen tarkentuminen</A>#<A HREF='https://www.stat.fi/til/vtp/meta.html' TARGET=_blank>Tilaston kuvaus</A>#<A HREF='https://www.stat.fi/til/vtp/laa.html' TARGET=_blank>Laatuselosteet</A>#"
+"<A HREF='https://www.stat.fi/til/vtp/men.html' TARGET=_blank>Menetelmäseloste</A>#<A HREF='https://www.stat.fi/til/vtp/kas.html' TARGET=_blank>Käsitteet ja määritelmät</A>#<A HREF='https://www.stat.fi/til/vtp/uut.html' TARGET=_blank>Muutoksia tässä "
+"tilastossa</A>##... tieto on salassapitosäännön alainen#... tieto on salassapitosäännön alainen##Poiketen muista kansantalouden tilinpidon taulukoista, tässä on esitetty (pl. P51K Kiinteän pääoman bruttomuodostus)  volyymisarjat sekä perusvuoden 2010 "
+"hintaisina (kantaindeksi; voidaan summata alasarjoista) että viitevuoden 2010 sarjoina (ketjuindeksi; ei voida summata alasarjoista). Viitevuoden 2010 volyymisarja on muodostettu ketjuttamalla edellisen vuoden hintaiset sarjat.";`
+	expected := ast.PxRow{
+		Keyword: ast.PxKeyword{
+			Keyword: "NOTE",
+		},
+		Value: ast.PxValue{
+			List: &[]ast.PxStringVal{
+				{
+					Strings: []string{
+						`<A HREF='https://www.stat.fi/til/vtp/rev.html' TARGET=_blank>Tietojen tarkentuminen</A>#<A HREF='https://www.stat.fi/til/vtp/meta.html' TARGET=_blank>Tilaston kuvaus</A>#<A HREF='https://www.stat.fi/til/vtp/laa.html' TARGET=_blank>Laatuselosteet</A>#`,
+						`<A HREF='https://www.stat.fi/til/vtp/men.html' TARGET=_blank>Menetelmäseloste</A>#<A HREF='https://www.stat.fi/til/vtp/kas.html' TARGET=_blank>Käsitteet ja määritelmät</A>#<A HREF='https://www.stat.fi/til/vtp/uut.html' TARGET=_blank>Muutoksia tässä `,
+						`tilastossa</A>##... tieto on salassapitosäännön alainen#... tieto on salassapitosäännön alainen##Poiketen muista kansantalouden tilinpidon taulukoista, tässä on esitetty (pl. P51K Kiinteän pääoman bruttomuodostus)  volyymisarjat sekä perusvuoden 2010 `,
+						`hintaisina (kantaindeksi; voidaan summata alasarjoista) että viitevuoden 2010 sarjoina (ketjuindeksi; ei voida summata alasarjoista). Viitevuoden 2010 volyymisarja on muodostettu ketjuttamalla edellisen vuoden hintaiset sarjat.`,
+					},
+				},
+			},
+		},
 	}
-
-	assert.Check(t, cmp.DeepEqual(er, *r))
+	parseRow(t, expected, text)
 }

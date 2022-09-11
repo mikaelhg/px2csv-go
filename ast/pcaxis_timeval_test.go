@@ -18,9 +18,7 @@ func parseRow(t *testing.T, expected ast.PxRow, text string) {
 
 func TestPxRowTimeValSimple(t *testing.T) {
 	text := `TIMEVAL[sv]("Besiktningsår")=TLIST(A1),"2017","2018","2019","2020","2021";`
-
 	sv := "sv"
-
 	er := ast.PxRow{
 		Keyword: ast.PxKeyword{
 			Keyword:    "TIMEVAL",
@@ -42,14 +40,12 @@ func TestPxRowTimeValSimple(t *testing.T) {
 			},
 		},
 	}
-
 	parseRow(t, er, text)
 }
 
 func TestPxRowTimeValMultipleRange(t *testing.T) {
 	text := `TIMEVAL("aika")=TLIST(A1,"1994"-"1996"),TLIST(M1,"199609"-"199612");`
-
-	er := ast.PxRow{
+	expected := ast.PxRow{
 		Keyword: ast.PxKeyword{
 			Keyword:    "TIMEVAL",
 			Specifiers: &[]string{"aika"},
@@ -67,17 +63,14 @@ func TestPxRowTimeValMultipleRange(t *testing.T) {
 			},
 		},
 	}
-
-	parseRow(t, er, text)
+	parseRow(t, expected, text)
 }
 
 func TestPxRowTimeValMultipleList(t *testing.T) {
 	text := `TIMEVAL("aika")=TLIST(A1),"1994","1995","1996",TLIST(M1),"199609","199610","199611","199612";`
-
-	er := ast.PxRow{
+	expected := ast.PxRow{
 		Keyword: ast.PxKeyword{
 			Keyword:    "TIMEVAL",
-			Language:   nil,
 			Specifiers: &[]string{"aika"},
 		},
 		Value: ast.PxValue{
@@ -92,10 +85,7 @@ func TestPxRowTimeValMultipleList(t *testing.T) {
 					Times: &[]string{"199609", "199610", "199611", "199612"},
 				},
 			},
-			String: nil,
-			List:   nil,
 		},
 	}
-
-	parseRow(t, er, text)
+	parseRow(t, expected, text)
 }

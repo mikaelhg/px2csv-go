@@ -28,16 +28,20 @@ type PxKeyword struct {
 }
 
 type PxValue struct {
-	Integer *int         `parser:"   @Integer"`
-	Times   *[]PxTimeVal `parser:"  | @@ (',' @@)* "`
-	String  *string      `parser:"  | @Ident "`
-	List    *[]string    `parser:"  | ( @String ( ',' @String )* ) "`
+	Integer *int           `parser:"   @Integer"`
+	Times   *[]PxTimeVal   `parser:"  | @@ (',' @@)* "`
+	String  *string        `parser:"  | @Ident "`
+	List    *[]PxStringVal `parser:"  | @@ (',' @@)* "`
 }
 
 type PxTimeVal struct {
 	Units string    `parser:" 'TLIST' '(' @( 'A1' | 'H1' | 'Q1' | 'M1' | 'W1' ) "`
 	Range *[]string `parser:" ( ',' @String '-' @String )? ')' "`
 	Times *[]string `parser:" ( ',' @String )* "`
+}
+
+type PxStringVal struct {
+	Strings []string `parser:" ( @String )* "`
 }
 
 type PxRow struct {
