@@ -47,8 +47,8 @@ DATA=
 
 func TestTerminate2(t *testing.T) {
 	text := `A=1;
-VALUES("Data")="Annual change %","Quartal change %","Value, M";
-PRECISION("Data","Value, M")=1;
+VALUES("Data")="Annual change %","Quartal change %","Value, M";
+PRECISION("Data","Value, M")=1;
 DATA=
 "." "." 325.3 
 60.078759 "." 520.8 

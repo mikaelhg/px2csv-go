@@ -10,6 +10,7 @@ var (
 		{Name: `String`, Pattern: `"(?:\\.|[^"])*"`},
 		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `Integer`, Pattern: `\d+`},
+		{Name: `Decimal`, Pattern: `\d*\.\d+`},
 		{Name: `Punct`, Pattern: `[][=\-;(),"]`},
 		{Name: `EOL`, Pattern: `[\n\r]+`},
 		{Name: `whitespace`, Pattern: `\s+`},
