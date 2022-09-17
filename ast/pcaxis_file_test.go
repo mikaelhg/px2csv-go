@@ -1,7 +1,9 @@
 package ast_test
 
 import (
+	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/mikaelhg/gpcaxis/ast"
 	"gotest.tools/v3/assert"
@@ -21,14 +23,43 @@ func parseFile(t *testing.T, filename string) {
 	header, err := ast.PxParser.Parse("", r, participle.AllowTrailing(true))
 	repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	assert.Check(t, header != nil)
 }
 
-func TestPxFileHeader(t *testing.T) {
-	parseFile(t, "../data/statfin_ehk_pxt_005_en.px")
+func AATestPxFileHeader(t *testing.T) {
+	var m1, m2 runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&m1)
+
+	// parseFile(t, "../data/statfin_ehk_pxt_005_en.px")
 	parseFile(t, "../data/010_kats_tau_101.px")
+
+	runtime.ReadMemStats(&m2)
+	fmt.Println("total:", m2.TotalAlloc-m1.TotalAlloc)
+	fmt.Println("mallocs:", m2.Mallocs-m1.Mallocs)
+
+	t.Error("test")
+}
+
+func BenchmarkPxFileHeader(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+
+		r, err := os.Open("../data/010_kats_tau_101.px")
+		if err != nil {
+			panic(err)
+		}
+		defer r.Close()
+		header, err := ast.PxParser.Parse("", r, participle.AllowTrailing(true))
+		// repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
+		if err != nil {
+			fmt.Println("errored")
+			b.Fatal(err)
+		}
+		assert.Check(b, header != nil)
+		// b.Error("test")
+	}
 }
 
 func TestTerminate(t *testing.T) {
@@ -40,7 +71,7 @@ DATA=
 	header, err := ast.PxParser.ParseString("", text, participle.AllowTrailing(true))
 	// repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	assert.Check(t, header != nil)
 }
@@ -56,7 +87,7 @@ DATA=
 	header, err := ast.PxParser.ParseString("", text, participle.AllowTrailing(true))
 	// repr.Println(header, repr.Indent("  "), repr.OmitEmpty(false))
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	assert.Check(t, header != nil)
 }

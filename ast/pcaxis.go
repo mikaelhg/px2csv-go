@@ -7,11 +7,13 @@ import (
 
 var (
 	PxLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{Name: `EOE`, Pattern: `;`},
+		{Name: `EOK`, Pattern: `=`},
 		{Name: `String`, Pattern: `"(?:\\.|[^"])*"`},
 		{Name: `Ident`, Pattern: `[a-zA-Z][a-zA-Z-_\d]*`},
 		{Name: `Integer`, Pattern: `\d+`},
 		{Name: `Decimal`, Pattern: `\d*\.\d+`},
-		{Name: `Punct`, Pattern: `[][=\-;(),"]`},
+		{Name: `Punct`, Pattern: `[][\-(),"]`},
 		{Name: `EOL`, Pattern: `[\n\r]+`},
 		{Name: `whitespace`, Pattern: `\s+`},
 	})
@@ -21,6 +23,15 @@ var (
 		participle.Elide("whitespace", "EOL"),
 	)
 )
+
+type PxFileHeader struct {
+	Rows []PxRow `parser:"( @@ )* 'DATA' '=' "`
+}
+
+type PxRow struct {
+	Keyword PxKeyword `parser:" @@ '=' "`
+	Value   PxValue   `parser:" @@ ';' "`
+}
 
 type PxKeyword struct {
 	Keyword    string    `parser:" ( (?! 'DATA' ) @Ident )! "`
@@ -43,13 +54,4 @@ type PxTimeVal struct {
 
 type PxStringVal struct {
 	Strings []string `parser:" ( @String )* "`
-}
-
-type PxRow struct {
-	Keyword PxKeyword `parser:" @@ '=' "`
-	Value   PxValue   `parser:" @@ ';' "`
-}
-
-type PxFileHeader struct {
-	Rows []PxRow `parser:"( @@ )* 'DATA' '=' "`
 }

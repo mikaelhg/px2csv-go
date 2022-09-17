@@ -11,7 +11,7 @@ import (
 func parseRow(t *testing.T, expected ast.PxRow, text string) {
 	r, err := rowParser.ParseString("", text)
 	if err != nil {
-		panic(err)
+		t.Fatal(err)
 	}
 	assert.Check(t, cmp.DeepEqual(expected, *r))
 }
