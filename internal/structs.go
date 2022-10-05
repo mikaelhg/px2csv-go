@@ -2,8 +2,8 @@ package internal
 
 type PxHeaderKeyword struct {
 	Keyword  string
-	Language *string
-	Subkeys  *[]string
+	Language string
+	Subkeys  []string
 }
 
 type PxHeaderValue struct {
@@ -27,13 +27,17 @@ type RowAccumulator struct {
 func (r *RowAccumulator) ToKeyword() PxHeaderKeyword {
 	return PxHeaderKeyword{
 		Keyword:  r.Keyword,
-		Language: &r.Language,
-		Subkeys:  &r.Subkeys,
+		Language: r.Language,
+		Subkeys:  r.Subkeys,
 	}
 }
 
 func (r *RowAccumulator) ToValue() PxHeaderValue {
 	return PxHeaderValue{Values: r.Values}
+}
+
+func (r *RowAccumulator) ToRow() PxHeaderRow {
+	return PxHeaderRow{Keyword: r.ToKeyword(), Value: r.ToValue()}
 }
 
 type HeaderParseState struct {

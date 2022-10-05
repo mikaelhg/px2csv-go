@@ -4,41 +4,46 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+
+	"golang.org/x/exp/slices"
 )
 
 type Parser struct {
 	hps     HeaderParseState
 	row     RowAccumulator
-	headers map[PxHeaderKeyword]PxHeaderValue
-}
-
-func (p Parser) Header(keyword string, language *string, subkeys *[]string) []string {
-	header, exists := p.headers[PxHeaderKeyword{
-		Keyword: keyword, Language: language, Subkeys: subkeys}]
-	if exists {
-		return header.Values
-	} else {
-		return nil
-	}
+	headers []PxHeaderRow
 }
 
 func NewParser() Parser {
-	return Parser{
-		headers: make(map[PxHeaderKeyword]PxHeaderValue),
+	return Parser{}
+}
+
+func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
+	for _, v := range p.headers {
+		if v.Keyword.Keyword == keyword &&
+			v.Keyword.Language == language &&
+			slices.Equal(v.Keyword.Subkeys, subkeys) {
+			return v.Value.Values
+		}
 	}
+	return nil
 }
 
 func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	fn := func(elem string) []string {
-		k := []string{elem}
-		return p.Header("VALUES", nil, &k)
+		return p.Header("VALUES", "", []string{elem})
 	}
 
-	stub := p.Header("STUB", nil, nil)
+	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, fn)
 
-	heading := p.Header("HEADING", nil, nil)
+	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, fn)
+
+	fmt.Printf("stub: %#v\n", stub)
+	fmt.Printf("heading: %#v\n", heading)
+	fmt.Printf("stubValues: %#v\n", stubValues)
+	fmt.Printf("headingValues: %#v\n", headingValues)
 
 }
 
@@ -51,12 +56,12 @@ func (p *Parser) ParseHeader(reader *bufio.Reader) {
 		stop, err := p.ParseHeaderCharacter(c)
 		if err != nil {
 			fmt.Printf("%#v\n", p.hps)
-			fmt.Printf("%#v\n", p.headers)
+			// fmt.Printf("%#v\n", p.headers)
 			panic(err)
 		}
 		if stop {
 			fmt.Printf("%#v\n", p.hps)
-			fmt.Printf("%#v\n", p.headers)
+			// fmt.Printf("%#v\n", p.headers)
 			return
 		}
 	}
@@ -129,7 +134,7 @@ func (p *Parser) ParseHeaderCharacter(c byte) (bool, error) {
 			p.row.Values = append(p.row.Values, p.row.Value)
 		}
 		p.hps.Semicolons += 1
-		p.headers[p.row.ToKeyword()] = p.row.ToValue()
+		p.headers = append(p.headers, p.row.ToRow())
 		p.row = RowAccumulator{}
 		return false, nil
 
