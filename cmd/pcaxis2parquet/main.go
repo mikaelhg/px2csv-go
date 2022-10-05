@@ -15,12 +15,13 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
+	reader := bufio.NewReader(f)
 
 	pxParser := Parser{
 		Headers: make(map[internal.PxHeaderKeyword]internal.PxHeaderValue),
 	}
-	pxParser.ParseHeader(f)
-
+	pxParser.ParseHeader(reader)
+	pxParser.ParseDataDense(reader)
 }
 
 type Parser struct {
@@ -30,11 +31,42 @@ type Parser struct {
 	Headers           map[internal.PxHeaderKeyword]internal.PxHeaderValue
 }
 
-func (p Parser) ParseDataDense() {
+func (p Parser) Header(keyword string, language *string, subkeys *[]string) []string {
+	header, exists := p.Headers[internal.PxHeaderKeyword{
+		Keyword:  keyword,
+		Language: language,
+		Subkeys:  subkeys,
+	}]
+	if exists {
+		return header.Values
+	} else {
+		return nil
+	}
 }
 
-func (p *Parser) ParseHeader(input *os.File) {
-	reader := bufio.NewReader(input)
+func (p Parser) ParseDataDense(reader *bufio.Reader) {
+	fn := func(elem string) []string {
+		k := []string{elem}
+		return p.Header("VALUES", nil, &k)
+	}
+
+	stub := p.Header("STUB", nil, nil)
+	stubValues := mapXtoY(stub, fn)
+
+	heading := p.Header("HEADING", nil, nil)
+	headingValues := mapXtoY(heading, fn)
+
+}
+
+func mapXtoY[X interface{}, Y interface{}](collection []X, fn func(elem X) Y) []Y {
+	var result []Y
+	for _, item := range collection {
+		result = append(result, fn(item))
+	}
+	return result
+}
+
+func (p *Parser) ParseHeader(reader *bufio.Reader) {
 	buffer := make([]byte, 1)
 out:
 	for {
