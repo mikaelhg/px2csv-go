@@ -35,7 +35,7 @@ func (p Parser) ParseDataDense() {
 
 func (p *Parser) ParseHeader(input *os.File) {
 	reader := bufio.NewReader(input)
-	buffer := make([]byte, 4096)
+	buffer := make([]byte, 1)
 out:
 	for {
 		n, err := reader.Read(buffer)
@@ -58,6 +58,7 @@ out:
 		}
 	}
 	fmt.Printf("%#v\n", p.HeaderParserState)
+	fmt.Printf("%#v\n", p.Headers)
 }
 
 func (p *Parser) ParseHeaderCharacter(c byte) (bool, error) {
