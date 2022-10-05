@@ -24,7 +24,7 @@ type RowAccumulator struct {
 	Values   []string
 }
 
-func (r RowAccumulator) ToKeyword() PxHeaderKeyword {
+func (r *RowAccumulator) ToKeyword() PxHeaderKeyword {
 	return PxHeaderKeyword{
 		Keyword:  r.Keyword,
 		Language: &r.Language,
@@ -32,7 +32,7 @@ func (r RowAccumulator) ToKeyword() PxHeaderKeyword {
 	}
 }
 
-func (r RowAccumulator) ToValue() PxHeaderValue {
+func (r *RowAccumulator) ToValue() PxHeaderValue {
 	return PxHeaderValue{Values: r.Values}
 }
 
