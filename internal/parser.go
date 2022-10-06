@@ -37,14 +37,19 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, fn)
+	stubFlattener := NewCartesianProduct(stubValues)
+	// stubFlattened := stubFlattener.All()
 
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, fn)
-	headingCsv := MapXtoY(headingValues, func(x []string) string { return strings.Join(x, " ") })
+	headingFlattener := NewCartesianProduct(headingValues)
+	headingFlattened := headingFlattener.All()
+	headingCsv := MapXtoY(headingFlattened, func(x []string) string { return strings.Join(x, " ") })
 
 	fmt.Printf("stub: %#v\n", stub)
 	fmt.Printf("heading: %#v\n", heading)
 	fmt.Printf("stubValues: %#v\n", stubValues)
+	fmt.Printf("stubFlattener: %#v\n", stubFlattener)
 	fmt.Printf("headingValues: %#v\n", headingValues)
 	fmt.Printf("headingCsv: %#v\n", headingCsv)
 
