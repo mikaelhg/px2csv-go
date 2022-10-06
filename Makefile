@@ -1,9 +1,10 @@
 .PHONY: clean test build
 
 build:
+	@mkdir -p ./bin
 	go build -ldflags="-s -w" -o ./bin/pcaxis2parquet ./cmd/pcaxis2parquet/
 
-cross:
+cross: build
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" \
 		-o ./bin/pcaxis2parquet-linux-amd64 ./cmd/pcaxis2parquet/
 	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" \
@@ -19,13 +20,13 @@ cross:
 
 clean:
 	go clean
-	rm -f ./bin/pcaxis2parquet
-	rm -f ./bin/pcaxis2parquet-linux-amd64
-	rm -f ./bin/pcaxis2parquet-linux-arm64
-	rm -f ./bin/pcaxis2parquet-darwin-amd64
-	rm -f ./bin/pcaxis2parquet-darwin-arm64
-	rm -f ./bin/pcaxis2parquet-windows-amd64.exe
-	rm -f ./bin/pcaxis2parquet-windows-arm64.exe
+	@rm -f ./bin/pcaxis2parquet
+	@rm -f ./bin/pcaxis2parquet-linux-amd64
+	@rm -f ./bin/pcaxis2parquet-linux-arm64
+	@rm -f ./bin/pcaxis2parquet-darwin-amd64
+	@rm -f ./bin/pcaxis2parquet-darwin-arm64
+	@rm -f ./bin/pcaxis2parquet-windows-amd64.exe
+	@rm -f ./bin/pcaxis2parquet-windows-arm64.exe
 
 test:
 	time -v go run ./cmd/pcaxis2parquet/main.go \

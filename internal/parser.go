@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"strings"
 
 	"golang.org/x/exp/slices"
 )
@@ -30,8 +31,8 @@ func (p *Parser) Header(keyword string, language string, subkeys []string) []str
 }
 
 func (p *Parser) ParseDataDense(reader *bufio.Reader) {
-	fn := func(elem string) []string {
-		return p.Header("VALUES", "", []string{elem})
+	fn := func(x string) []string {
+		return p.Header("VALUES", "", []string{x})
 	}
 
 	stub := p.Header("STUB", "", []string{})
@@ -39,12 +40,18 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, fn)
+	headingCsv := MapXtoY(headingValues, func(x []string) string { return strings.Join(x, " ") })
 
 	fmt.Printf("stub: %#v\n", stub)
 	fmt.Printf("heading: %#v\n", heading)
 	fmt.Printf("stubValues: %#v\n", stubValues)
 	fmt.Printf("headingValues: %#v\n", headingValues)
+	fmt.Printf("headingCsv: %#v\n", headingCsv)
 
+}
+
+func (p *Parser) ParseDataDenseCharacter(c byte) (bool, error) {
+	return false, nil
 }
 
 func (p *Parser) ParseHeader(reader *bufio.Reader) {
