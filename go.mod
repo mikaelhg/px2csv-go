@@ -1,5 +1,5 @@
 module github.com/mikaelhg/gpcaxis
 
-go 1.18
+go 1.19
 
-require golang.org/x/exp v0.0.0-20221004215720-b9f4876ce741 // indirect
+require golang.org/x/exp v0.0.0-20221004215720-b9f4876ce741

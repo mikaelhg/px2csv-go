@@ -2,13 +2,16 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"os"
 
 	"github.com/mikaelhg/gpcaxis/internal"
 )
 
 func main() {
-	f, err := os.Open(os.Args[1])
+	filename := flag.String("file", "", "PX file")
+	flag.Parse()
+	f, err := os.Open(*filename)
 	if err != nil {
 		panic(err)
 	}
