@@ -27,4 +27,6 @@ func main() {
 	pxParser := internal.NewParser()
 	pxParser.ParseHeader(reader)
 	pxParser.ParseDataDense(reader, writer)
+	writer.Flush()
+	outf.Close()
 }
