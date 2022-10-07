@@ -42,6 +42,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, valuesHeader)
 	stubFlattener := NewCartesianProduct(stubValues)
+	// stubWidth := len(stub)
 
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, valuesHeader)
@@ -57,8 +58,10 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	writer.WriteString("\"\n")
 
 	quotes := 0
+	bufLength := 0
+	currentValue := 0
 	var buf bytes.Buffer
-	values := make([]string, 0)
+	values := make([]string, headingWidth)
 	for {
 		c, err := reader.ReadByte()
 		if err != nil {
@@ -72,21 +75,25 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 			quotes += 1
 
 		} else if c == ' ' || c == '\n' || c == '\r' {
-			if buf.Len() > 0 {
-				values = append(values, buf.String())
+			if bufLength > 0 {
+				values[currentValue] = buf.String()
 				buf.Reset()
+				bufLength = 0
+				currentValue += 1
 			}
-			if len(values) == headingWidth {
+			if currentValue == headingWidth {
 				stubs, _ := stubFlattener.Next()
-				writer.WriteString("\"")
+				writer.WriteByte('"')
 				writer.WriteString(strings.Join(stubs, "\";\""))
-				writer.WriteString("\";")
+				writer.WriteByte('"')
+				writer.WriteByte(';')
 				writer.WriteString(strings.Join(values, ";"))
-				writer.WriteString("\n")
-				values = make([]string, 0)
+				writer.WriteByte('\n')
+				currentValue = 0
 			}
 		} else if c != ';' {
 			buf.WriteByte(c)
+			bufLength += 1
 		}
 	}
 
