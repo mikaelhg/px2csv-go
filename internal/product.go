@@ -38,7 +38,7 @@ func (c *CartesianProduct) Next() ([]string, bool) {
 func (c *CartesianProduct) step() ([]int, bool) {
 	ret := make([]int, c.length)
 	copy(ret, c.counters)
-	for i := 0; i < c.length; i++ {
+	for i := c.length - 1; i >= 0; i-- {
 		if ret[i] < c.lengths[i]-1 {
 			ret[i] += 1
 			return ret, false

@@ -15,9 +15,9 @@ func TestCartesianProduct(t *testing.T) {
 	c := internal.NewCartesianProduct(data)
 	result := c.All()
 	expected := [][]string{
-		{"a", "1"}, {"b", "1"}, {"c", "1"},
-		{"a", "2"}, {"b", "2"}, {"c", "2"},
-		{"a", "3"}, {"b", "3"}, {"c", "3"},
+		{"a", "1"}, {"a", "2"}, {"a", "3"},
+		{"b", "1"}, {"b", "2"}, {"b", "3"},
+		{"c", "1"}, {"c", "2"}, {"c", "3"},
 	}
 	assert.Equal(t, expected, result, "should be the same")
 }
