@@ -42,7 +42,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, valuesHeader)
 	stubFlattener := NewCartesianProduct(stubValues)
-	// stubWidth := len(stub)
+	stubWidth := len(stub)
 
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, valuesHeader)
@@ -84,10 +84,24 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 			if currentValue == headingWidth {
 				stubs, _ := stubFlattener.Next()
 				writer.WriteByte('"')
-				writer.WriteString(strings.Join(stubs, "\";\""))
+				// writer.WriteString(strings.Join(stubs, "\";\""))
+				for i, s := range stubs {
+					writer.WriteString(s)
+					if i < stubWidth-1 {
+						writer.WriteByte('"')
+						writer.WriteByte(';')
+						writer.WriteByte('"')
+					}
+				}
 				writer.WriteByte('"')
 				writer.WriteByte(';')
-				writer.WriteString(strings.Join(values, ";"))
+				//writer.WriteString(strings.Join(values, ";"))
+				for i, s := range values {
+					writer.WriteString(s)
+					if i < headingWidth-1 {
+						writer.WriteByte(';')
+					}
+				}
 				writer.WriteByte('\n')
 				currentValue = 0
 			}
