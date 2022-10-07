@@ -9,15 +9,22 @@ import (
 )
 
 func main() {
-	filename := flag.String("file", "", "PX file")
+	pxFilename := flag.String("file", "", "PX file")
+	csvFilename := flag.String("csv", "", "CSV file")
 	flag.Parse()
-	f, err := os.Open(*filename)
+	inf, err := os.Open(*pxFilename)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
-	reader := bufio.NewReader(f)
+	defer inf.Close()
+	outf, err := os.OpenFile(*csvFilename, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer outf.Close()
+	reader := bufio.NewReader(inf)
+	writer := bufio.NewWriter(outf)
 	pxParser := internal.NewParser()
 	pxParser.ParseHeader(reader)
-	pxParser.ParseDataDense(reader)
+	pxParser.ParseDataDense(reader, writer)
 }
