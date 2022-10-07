@@ -74,7 +74,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 		if c == '"' {
 			quotes += 1
 
-		} else if c == ' ' || c == '\n' || c == '\r' {
+		} else if c == ' ' || c == '\n' || c == '\r' || c == ';' {
 			if bufLength > 0 {
 				values[currentValue] = buf.String()
 				buf.Reset()
@@ -84,7 +84,6 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 			if currentValue == headingWidth {
 				stubs, _ := stubFlattener.Next()
 				writer.WriteByte('"')
-				// writer.WriteString(strings.Join(stubs, "\";\""))
 				for i, s := range stubs {
 					writer.WriteString(s)
 					if i < stubWidth-1 {
@@ -95,7 +94,6 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 				}
 				writer.WriteByte('"')
 				writer.WriteByte(';')
-				//writer.WriteString(strings.Join(values, ";"))
 				for i, s := range values {
 					writer.WriteString(s)
 					if i < headingWidth-1 {
@@ -105,7 +103,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 				writer.WriteByte('\n')
 				currentValue = 0
 			}
-		} else if c != ';' {
+		} else {
 			buf.WriteByte(c)
 			bufLength += 1
 		}
