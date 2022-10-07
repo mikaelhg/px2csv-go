@@ -30,23 +30,19 @@ func (c *CartesianProduct) Next() ([]string, bool) {
 	for i := 0; i < c.length; i++ {
 		ret[i] = c.lists[i][c.counters[i]]
 	}
-	counters, stop := c.step()
-	c.counters = counters
-	return ret, stop
+	return ret, c.step()
 }
 
-func (c *CartesianProduct) step() ([]int, bool) {
-	ret := make([]int, c.length)
-	copy(ret, c.counters)
+func (c *CartesianProduct) step() bool {
 	for i := c.length - 1; i >= 0; i-- {
-		if ret[i] < c.lengths[i]-1 {
-			ret[i] += 1
-			return ret, false
+		if c.counters[i] < c.lengths[i]-1 {
+			c.counters[i] += 1
+			return false
 		} else {
-			ret[i] = 0
+			c.counters[i] = 0
 		}
 	}
-	return nil, true
+	return true
 }
 
 func (c *CartesianProduct) All() [][]string {
