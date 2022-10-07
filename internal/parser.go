@@ -2,8 +2,9 @@ package internal
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
-	"fmt"
+	"io"
 	"strings"
 
 	"golang.org/x/exp/slices"
@@ -38,20 +39,51 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, fn)
 	stubFlattener := NewCartesianProduct(stubValues)
-	// stubFlattened := stubFlattener.All()
 
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, fn)
 	headingFlattener := NewCartesianProduct(headingValues)
 	headingFlattened := headingFlattener.All()
-	headingCsv := MapXtoY(headingFlattened, func(x []string) string { return strings.Join(x, " ") })
+	headingWidth := len(headingFlattened)
+	headingCsv := MapXtoY(headingFlattened, func(x []string) string {
+		return strings.Join(x, " ")
+	})
 
-	fmt.Printf("stub: %#v\n", stub)
-	fmt.Printf("heading: %#v\n", heading)
-	fmt.Printf("stubValues: %#v\n", stubValues)
-	fmt.Printf("stubFlattener: %#v\n", stubFlattener)
-	fmt.Printf("headingValues: %#v\n", headingValues)
-	fmt.Printf("headingCsv: %#v\n", headingCsv)
+	print("\"")
+	print(strings.Join(stub, "\";\""))
+	print("\";\"")
+	print(strings.Join(headingCsv, "\";\""))
+	println("\"")
+
+	var buf bytes.Buffer
+	values := make([]string, 0)
+	for {
+		c, err := reader.ReadByte()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				return
+			} else {
+				panic(err)
+			}
+		}
+		if c == ' ' || c == '\n' || c == '\r' {
+			if buf.Len() > 0 {
+				values = append(values, buf.String())
+				buf.Reset()
+			}
+			if len(values) == headingWidth {
+				stubs, _ := stubFlattener.Next()
+				print("\"")
+				print(strings.Join(stubs, "\";\""))
+				print("\";")
+				print(strings.Join(values, ";"))
+				println()
+				values = make([]string, 0)
+			}
+		} else {
+			buf.WriteByte(c)
+		}
+	}
 
 }
 
@@ -67,13 +99,9 @@ func (p *Parser) ParseHeader(reader *bufio.Reader) {
 		}
 		stop, err := p.ParseHeaderCharacter(c)
 		if err != nil {
-			fmt.Printf("%#v\n", p.hps)
-			// fmt.Printf("%#v\n", p.headers)
 			panic(err)
 		}
 		if stop {
-			fmt.Printf("%#v\n", p.hps)
-			// fmt.Printf("%#v\n", p.headers)
 			return
 		}
 	}
