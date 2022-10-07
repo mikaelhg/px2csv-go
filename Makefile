@@ -33,7 +33,7 @@ clean:
 
 test:
 	time -v go run ./cmd/pcaxis2parquet/main.go \
-		--file=./data/statfin_altp_pxt_12bd.px
+		--px ./data/statfin_vtp_pxt_124l.px --csv /dev/null
 
 test2:
-	time -v ./bin/pcaxis2parquet --file=./data/statfin_vtp_pxt_124l.px
+	time -v ./bin/pcaxis2parquet --px ./data/statfin_vtp_pxt_124l.px --csv /dev/null

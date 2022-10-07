@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	pxFilename := flag.String("file", "", "PX file")
-	csvFilename := flag.String("csv", "", "CSV file")
+	pxFilename := flag.String("px", "", "PC-AXIS input file")
+	csvFilename := flag.String("csv", "", "CSV output file")
 	flag.Parse()
 	inf, err := os.Open(*pxFilename)
 	if err != nil {
