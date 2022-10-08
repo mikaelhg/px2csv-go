@@ -9,6 +9,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const DataValueWidth = 16 // bytes
+
 type Parser struct {
 	hps     HeaderParseState
 	row     RowAccumulator
@@ -55,9 +57,10 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	quotes := 0
 	bufLength := 0
 	currentValue := 0
-	buf := make([]byte, headingWidth*16)
+	buf := make([]byte, headingWidth*DataValueWidth)
 	values := make([][]byte, headingWidth)
 	valueLengths := make([]int, headingWidth)
+	theseStubs := make([]*string, stubWidth)
 
 	// This is the most performance-critical part of the whole program,
 	// and we'll want to avoid any heap allocations inside the parser loop.
@@ -82,11 +85,11 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 			}
 			if currentValue == headingWidth {
 				currentValue = 0
-				stubs, _ := stubFlattener.Next() // still allocates a string array
-				writeCsvRow(writer, &stubs, &values, &valueLengths, stubWidth, headingWidth)
+				stubFlattener.NextP(&theseStubs)
+				writeCsvRow(writer, &theseStubs, &values, &valueLengths, stubWidth, headingWidth)
 			}
 		} else {
-			buf[bufLength+(16*currentValue)] = c
+			buf[bufLength+(DataValueWidth*currentValue)] = c
 			bufLength += 1
 		}
 	}
@@ -102,11 +105,11 @@ func writeCsvHeader(writer *bufio.Writer, stub, headingCsv []string) {
 }
 
 func writeCsvRow(writer *bufio.Writer,
-	stubs *[]string, values *[][]byte,
+	stubs *[]*string, values *[][]byte,
 	valueLengths *[]int, stubWidth, headingWidth int) {
 	writer.WriteByte('"')
 	for i, s := range *stubs {
-		writer.WriteString(s)
+		writer.WriteString(*s)
 		if i < stubWidth-1 {
 			writer.WriteByte('"')
 			writer.WriteByte(';')
