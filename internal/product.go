@@ -33,11 +33,11 @@ func (c *CartesianProduct) Next() ([]string, bool) {
 	return ret, c.step()
 }
 
-func (c *CartesianProduct) NextP(ret *[]*string) bool {
+func (c *CartesianProduct) NextP(ret *[]*string) {
 	for i := 0; i < c.length; i++ {
 		(*ret)[i] = &c.lists[i][c.counters[i]]
 	}
-	return c.step()
+	c.step()
 }
 
 func (c *CartesianProduct) step() bool {

@@ -32,12 +32,13 @@ func (p *Parser) Header(keyword string, language string, subkeys []string) []str
 	return nil
 }
 
+func joinStringSlice(ss []string) string {
+	return strings.Join(ss, " ")
+}
+
 func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	valuesHeader := func(x string) []string {
 		return p.Header("VALUES", "", []string{x})
-	}
-	joinStringSlice := func(x []string) string {
-		return strings.Join(x, " ")
 	}
 
 	stub := p.Header("STUB", "", []string{})
@@ -64,6 +65,8 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 
 	// This is the most performance-critical part of the whole program,
 	// and we'll want to avoid any heap allocations inside the parser loop.
+	// That's why we indulge with all this funky pointer arithmetic and
+	// pre-allocation.
 	for {
 		c, err := reader.ReadByte()
 		if err != nil {
