@@ -5,7 +5,7 @@ build:
 	go build -o ./bin/pcaxis2parquet ./cmd/pcaxis2parquet/
 
 cross: build
-	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" \
+	GOOS=linux GOARCH=amd64 go build -buildmode=exe -ldflags="-s -w" \
 		-o ./bin/pcaxis2parquet-linux-amd64 ./cmd/pcaxis2parquet/
 	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" \
 		-o ./bin/pcaxis2parquet-linux-arm64 ./cmd/pcaxis2parquet/
@@ -18,7 +18,7 @@ cross: build
 	GOOS=windows GOARCH=arm64 go build -ldflags="-s -w" \
 		-o ./bin/pcaxis2parquet-windows-arm64.exe ./cmd/pcaxis2parquet/
 	# GOOS=js GOARCH=wasm go build -ldflags="-s -w" \
-	# 	-o ./bin/pcaxis2parquet.wasm ./cmd/pcaxis2parquet/
+	#  	-o ./bin/pcaxis2parquet.wasm ./cmd/pcaxis2parquet/
 
 clean:
 	go clean
@@ -32,8 +32,13 @@ clean:
 	@rm -f ./bin/pcaxis2parquet.wasm
 
 test:
-	time -v go run ./cmd/pcaxis2parquet/main.go \
-		--px ./data/statfin_vtp_pxt_124l.px --csv /dev/null
+	zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
+	    ./bin/pcaxis2parquet --px /dev/stdin --csv /dev/null
 
-test2:
-	time -v ./bin/pcaxis2parquet --px ./data/statfin_vtp_pxt_124l.px --csv /dev/null
+test-interpret:
+	zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
+	    go run ./cmd/pcaxis2parquet/main.go --px /dev/stdin --csv /dev/null
+
+test-debug:
+	GODEBUG=gctrace=1 zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
+	    ./bin/pcaxis2parquet --px /dev/stdin --csv /dev/null

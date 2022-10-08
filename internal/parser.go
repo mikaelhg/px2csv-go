@@ -50,11 +50,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	headingWidth := len(headingFlattened)
 	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 
-	writer.WriteString("\"")
-	writer.WriteString(strings.Join(stub, "\";\""))
-	writer.WriteString("\";\"")
-	writer.WriteString(strings.Join(headingCsv, "\";\""))
-	writer.WriteString("\"\n")
+	writeCsvHeader(writer, stub, headingCsv)
 
 	quotes := 0
 	bufLength := 0
@@ -62,6 +58,9 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	buf := make([]byte, headingWidth*16)
 	values := make([][]byte, headingWidth)
 	valueLengths := make([]int, headingWidth)
+
+	// This is the most performance-critical part of the whole program,
+	// and we'll want to avoid any heap allocations inside the parser loop.
 	for {
 		c, err := reader.ReadByte()
 		if err != nil {
@@ -82,26 +81,9 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 				currentValue += 1
 			}
 			if currentValue == headingWidth {
-				stubs, _ := stubFlattener.Next()
-				writer.WriteByte('"')
-				for i, s := range stubs {
-					writer.WriteString(s)
-					if i < stubWidth-1 {
-						writer.WriteByte('"')
-						writer.WriteByte(';')
-						writer.WriteByte('"')
-					}
-				}
-				writer.WriteByte('"')
-				writer.WriteByte(';')
-				for i, s := range values {
-					writer.Write(s[0:valueLengths[i]])
-					if i < headingWidth-1 {
-						writer.WriteByte(';')
-					}
-				}
-				writer.WriteByte('\n')
 				currentValue = 0
+				stubs, _ := stubFlattener.Next() // still allocates a string array
+				writeCsvRow(writer, &stubs, &values, &valueLengths, stubWidth, headingWidth)
 			}
 		} else {
 			buf[bufLength+(16*currentValue)] = c
@@ -109,6 +91,37 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 		}
 	}
 
+}
+
+func writeCsvHeader(writer *bufio.Writer, stub, headingCsv []string) {
+	writer.WriteString("\"")
+	writer.WriteString(strings.Join(stub, "\";\""))
+	writer.WriteString("\";\"")
+	writer.WriteString(strings.Join(headingCsv, "\";\""))
+	writer.WriteString("\"\n")
+}
+
+func writeCsvRow(writer *bufio.Writer,
+	stubs *[]string, values *[][]byte,
+	valueLengths *[]int, stubWidth, headingWidth int) {
+	writer.WriteByte('"')
+	for i, s := range *stubs {
+		writer.WriteString(s)
+		if i < stubWidth-1 {
+			writer.WriteByte('"')
+			writer.WriteByte(';')
+			writer.WriteByte('"')
+		}
+	}
+	writer.WriteByte('"')
+	writer.WriteByte(';')
+	for i, s := range *values {
+		writer.Write(s[0:(*valueLengths)[i]])
+		if i < headingWidth-1 {
+			writer.WriteByte(';')
+		}
+	}
+	writer.WriteByte('\n')
 }
 
 func (p *Parser) ParseHeader(reader *bufio.Reader) {
