@@ -18,7 +18,7 @@ clean:
 
 test:
 	zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
-	    ./bin/pcaxis2parquet --px /dev/stdin --csv /dev/null
+	    ./bin/pcaxis2parquet-linux-amd64 --px /dev/stdin --csv /dev/null
 
 test-interpret:
 	zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
@@ -26,7 +26,7 @@ test-interpret:
 
 test-gctrace:
 	GODEBUG=gctrace=1 zcat ./data/statfin_vtp_pxt_124l.px.gz | time -v \
-	    ./bin/pcaxis2parquet --px /dev/stdin --csv /dev/null
+	    ./bin/pcaxis2parquet-linux-amd64 --px /dev/stdin --csv /dev/null
 
 test-validate:
 	@zcat ./data/010_kats_tau_101.px.gz | \
