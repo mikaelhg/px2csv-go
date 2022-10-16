@@ -1,10 +1,16 @@
 package internal
 
+import "golang.org/x/exp/slices"
+
 type PxHeaderRow struct {
 	Keyword  string
 	Language string
 	Subkeys  []string
 	Values   []string
+}
+
+func (r *PxHeaderRow) Equals(keyword string, language string, subkeys []string) bool {
+	return r.Keyword == keyword && r.Language == language && slices.Equal(r.Subkeys, subkeys)
 }
 
 type RowAccumulator struct {
@@ -34,8 +40,4 @@ type HeaderParseState struct {
 	SquarebracketClose int
 	ParenthesisOpen    int
 	ParenthesisClose   int
-}
-
-type DataParserState struct {
-	Count int
 }

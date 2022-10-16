@@ -5,8 +5,6 @@ import (
 	"errors"
 	"io"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
@@ -15,13 +13,12 @@ type Parser struct {
 	hps     HeaderParseState
 	row     RowAccumulator
 	headers []PxHeaderRow
+	writer  StatCubeWriter
 }
 
 func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
 	for _, v := range p.headers {
-		if v.Keyword == keyword &&
-			v.Language == language &&
-			slices.Equal(v.Subkeys, subkeys) {
+		if v.Equals(keyword, language, subkeys) {
 			return v.Values
 		}
 	}
@@ -36,7 +33,7 @@ func (p *Parser) valuesHeader(subkey string) []string {
 	return p.Header("VALUES", "", []string{subkey})
 }
 
-func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
+func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, p.valuesHeader)
 	stubFlattener := NewCartesianProduct(stubValues)
@@ -49,7 +46,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	headingWidth := len(headingFlattened)
 	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 
-	writeCsvHeader(writer, stub, headingCsv)
+	p.writer.writeHeading(stub, headingCsv)
 
 	quotes := 0
 	bufLength := 0
@@ -85,7 +82,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 			if currentValue == headingWidth {
 				currentValue = 0
 				stubFlattener.NextP(&theseStubs)
-				writeCsvRow(writer, &theseStubs, &values, &valueLengths, stubWidth, headingWidth)
+				p.writer.writeRow(&theseStubs, &values, &valueLengths, stubWidth, headingWidth)
 			}
 		} else {
 			buf[bufLength+(DataValueWidth*currentValue)] = c
@@ -93,37 +90,6 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 		}
 	}
 
-}
-
-func writeCsvHeader(writer *bufio.Writer, stub, headingCsv []string) {
-	writer.WriteString("\"")
-	writer.WriteString(strings.Join(stub, "\";\""))
-	writer.WriteString("\";\"")
-	writer.WriteString(strings.Join(headingCsv, "\";\""))
-	writer.WriteString("\"\n")
-}
-
-func writeCsvRow(writer *bufio.Writer,
-	stubs *[]*string, values *[][]byte,
-	valueLengths *[]int, stubWidth, headingWidth int) {
-	writer.WriteByte('"')
-	for i, s := range *stubs {
-		writer.WriteString(*s)
-		if i < stubWidth-1 {
-			writer.WriteByte('"')
-			writer.WriteByte(';')
-			writer.WriteByte('"')
-		}
-	}
-	writer.WriteByte('"')
-	writer.WriteByte(';')
-	for i, s := range *values {
-		writer.Write(s[0:(*valueLengths)[i]])
-		if i < headingWidth-1 {
-			writer.WriteByte(';')
-		}
-	}
-	writer.WriteByte('\n')
 }
 
 func (p *Parser) ParseHeader(reader *bufio.Reader) {
@@ -143,7 +109,7 @@ func (p *Parser) ParseHeader(reader *bufio.Reader) {
 }
 
 // TIMEVAL and HIERARCHY not yet supported beyond passing them through.
-func (p *Parser) ParseHeaderCharacter(c byte) (bool, error) {
+func (p *Parser) ParseHeaderCharacter(c byte) (stop bool, err error) {
 	inQuotes := p.hps.Quotes%2 == 1
 	inParenthesis := p.hps.ParenthesisOpen > p.hps.ParenthesisClose
 	inKey := p.hps.Semicolons == p.hps.Equals
