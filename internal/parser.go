@@ -10,10 +10,14 @@ import (
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
 
 type Parser struct {
-	hps     HeaderParseState
-	row     RowAccumulator
-	headers []PxHeaderRow
-	writer  StatCubeWriter
+	hps        HeaderParseState
+	row        RowAccumulator
+	headers    []PxHeaderRow
+	cubeWriter StatCubeWriter
+}
+
+func NewParser(cubeWriter StatCubeWriter) Parser {
+	return Parser{cubeWriter: cubeWriter}
 }
 
 func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
@@ -46,7 +50,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	headingWidth := len(headingFlattened)
 	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 
-	p.writer.writeHeading(stub, headingCsv)
+	(p.cubeWriter).writeHeading(stub, headingCsv)
 
 	quotes := 0
 	bufLength := 0
@@ -82,7 +86,8 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 			if currentValue == headingWidth {
 				currentValue = 0
 				stubFlattener.NextP(&theseStubs)
-				p.writer.writeRow(&theseStubs, &values, &valueLengths, stubWidth, headingWidth)
+				(p.cubeWriter).writeRow(&theseStubs, &values,
+					&valueLengths, stubWidth, headingWidth)
 			}
 		} else {
 			buf[bufLength+(DataValueWidth*currentValue)] = c

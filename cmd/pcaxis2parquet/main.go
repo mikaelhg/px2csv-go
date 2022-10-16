@@ -27,8 +27,8 @@ func main() {
 
 	reader, writer := bufio.NewReader(inf), bufio.NewWriter(outf)
 
-	pxParser := internal.Parser{}
+	pxParser := internal.NewParser(internal.NewStatCubeCsvWriter(writer))
 	pxParser.ParseHeader(reader)
-	pxParser.ParseDataDense(reader, writer)
+	pxParser.ParseDataDense(reader)
 	writer.Flush()
 }

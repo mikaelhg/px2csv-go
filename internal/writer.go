@@ -15,7 +15,11 @@ type StatCubeCsvWriter struct {
 	writer *bufio.Writer
 }
 
-func (w *StatCubeCsvWriter) writeHeading(stub, headingCsv []string) {
+func NewStatCubeCsvWriter(writer *bufio.Writer) StatCubeCsvWriter {
+	return StatCubeCsvWriter{writer: writer}
+}
+
+func (w StatCubeCsvWriter) writeHeading(stub, headingCsv []string) {
 	w.writer.WriteString("\"")
 	w.writer.WriteString(strings.Join(stub, "\";\""))
 	w.writer.WriteString("\";\"")
@@ -23,7 +27,7 @@ func (w *StatCubeCsvWriter) writeHeading(stub, headingCsv []string) {
 	w.writer.WriteString("\"\n")
 }
 
-func (w *StatCubeCsvWriter) writeRow(stubs *[]*string, values *[][]byte,
+func (w StatCubeCsvWriter) writeRow(stubs *[]*string, values *[][]byte,
 	valueLengths *[]int, stubWidth, headingWidth int) {
 	w.writer.WriteByte('"')
 	for i, s := range *stubs {
