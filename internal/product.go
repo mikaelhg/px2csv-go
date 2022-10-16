@@ -21,10 +21,6 @@ func NewCartesianProduct(input [][]string) CartesianProduct {
 	return ret
 }
 
-func (c *CartesianProduct) Reset() {
-	c.counters = make([]int, c.length)
-}
-
 func (c *CartesianProduct) Next() ([]string, bool) {
 	ret := make([]string, c.length)
 	for i := 0; i < c.length; i++ {
