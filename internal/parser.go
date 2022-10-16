@@ -146,6 +146,7 @@ func (p *Parser) ParseHeader(reader *bufio.Reader) {
 	}
 }
 
+// TIMEVAL and HIERARCHY not yet supported beyond passing them through.
 func (p *Parser) ParseHeaderCharacter(c byte) (bool, error) {
 	inQuotes := p.hps.Quotes%2 == 1
 	inParenthesis := p.hps.ParenthesisOpen > p.hps.ParenthesisClose
@@ -206,7 +207,7 @@ func (p *Parser) ParseHeaderCharacter(c byte) (bool, error) {
 		p.hps.Equals += 1
 
 	} else if c == ';' && inKey && !inQuotes {
-		return true, errors.New("found a second equals sign without a matching semicolon. unexpected keyword terminator")
+		return true, errors.New("found a semicolon without a matching equals sign, value terminator without keyword terminator")
 
 	} else if c == ';' && !inKey && !inQuotes {
 		if len(p.row.Value) > 0 {
