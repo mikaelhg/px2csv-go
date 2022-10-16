@@ -24,7 +24,7 @@ func main() {
 	defer outf.Close()
 	reader := bufio.NewReader(inf)
 	writer := bufio.NewWriter(outf)
-	pxParser := internal.NewParser()
+	pxParser := internal.Parser{}
 	pxParser.ParseHeader(reader)
 	pxParser.ParseDataDense(reader, writer)
 	writer.Flush()

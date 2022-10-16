@@ -9,7 +9,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-const DataValueWidth = 16 // bytes
+const DataValueWidth = 128 // max width of 32 bit float string in bytes
 
 type Parser struct {
 	hps     HeaderParseState
@@ -17,16 +17,12 @@ type Parser struct {
 	headers []PxHeaderRow
 }
 
-func NewParser() Parser {
-	return Parser{}
-}
-
 func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
 	for _, v := range p.headers {
-		if v.Keyword.Keyword == keyword &&
-			v.Keyword.Language == language &&
-			slices.Equal(v.Keyword.Subkeys, subkeys) {
-			return v.Value.Values
+		if v.Keyword == keyword &&
+			v.Language == language &&
+			slices.Equal(v.Subkeys, subkeys) {
+			return v.Values
 		}
 	}
 	return nil

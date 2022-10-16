@@ -1,18 +1,10 @@
 package internal
 
-type PxHeaderKeyword struct {
+type PxHeaderRow struct {
 	Keyword  string
 	Language string
 	Subkeys  []string
-}
-
-type PxHeaderValue struct {
-	Values []string
-}
-
-type PxHeaderRow struct {
-	Keyword PxHeaderKeyword
-	Value   PxHeaderValue
+	Values   []string
 }
 
 type RowAccumulator struct {
@@ -24,20 +16,13 @@ type RowAccumulator struct {
 	Values   []string
 }
 
-func (r *RowAccumulator) ToKeyword() PxHeaderKeyword {
-	return PxHeaderKeyword{
+func (r *RowAccumulator) ToRow() PxHeaderRow {
+	return PxHeaderRow{
 		Keyword:  r.Keyword,
 		Language: r.Language,
 		Subkeys:  r.Subkeys,
+		Values:   r.Values,
 	}
-}
-
-func (r *RowAccumulator) ToValue() PxHeaderValue {
-	return PxHeaderValue{Values: r.Values}
-}
-
-func (r *RowAccumulator) ToRow() PxHeaderRow {
-	return PxHeaderRow{Keyword: r.ToKeyword(), Value: r.ToValue()}
 }
 
 type HeaderParseState struct {
