@@ -36,18 +36,18 @@ func joinStringSlice(ss []string) string {
 	return strings.Join(ss, " ")
 }
 
-func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
-	valuesHeader := func(x string) []string {
-		return p.Header("VALUES", "", []string{x})
-	}
+func (p *Parser) valuesHeader(subkey string) []string {
+	return p.Header("VALUES", "", []string{subkey})
+}
 
+func (p *Parser) ParseDataDense(reader *bufio.Reader, writer *bufio.Writer) {
 	stub := p.Header("STUB", "", []string{})
-	stubValues := MapXtoY(stub, valuesHeader)
+	stubValues := MapXtoY(stub, p.valuesHeader)
 	stubFlattener := NewCartesianProduct(stubValues)
 	stubWidth := len(stub)
 
 	heading := p.Header("HEADING", "", []string{})
-	headingValues := MapXtoY(heading, valuesHeader)
+	headingValues := MapXtoY(heading, p.valuesHeader)
 	headingFlattener := NewCartesianProduct(headingValues)
 	headingFlattened := headingFlattener.All()
 	headingWidth := len(headingFlattened)
