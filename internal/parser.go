@@ -13,11 +13,7 @@ type Parser struct {
 	hps        HeaderParseState
 	row        RowAccumulator
 	headers    []PxHeaderRow
-	cubeWriter StatCubeWriter
-}
-
-func NewParser(cubeWriter StatCubeWriter) Parser {
-	return Parser{cubeWriter: cubeWriter}
+	CubeWriter StatCubeWriter
 }
 
 func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
@@ -50,8 +46,6 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	headingWidth := len(headingFlattened)
 	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 
-	(p.cubeWriter).writeHeading(stub, headingCsv)
-
 	quotes := 0
 	bufLength := 0
 	currentValue := 0
@@ -59,6 +53,8 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	values := make([][]byte, headingWidth)
 	valueLengths := make([]int, headingWidth)
 	theseStubs := make([]*string, stubWidth)
+
+	p.CubeWriter.WriteHeading(stub, headingCsv)
 
 	// This is the most performance-critical part of the whole program,
 	// and we'll want to avoid any heap allocations inside the parser loop.
@@ -86,7 +82,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 			if currentValue == headingWidth {
 				currentValue = 0
 				stubFlattener.NextP(&theseStubs)
-				(p.cubeWriter).writeRow(&theseStubs, &values,
+				p.CubeWriter.WriteRow(&theseStubs, &values,
 					&valueLengths, stubWidth, headingWidth)
 			}
 		} else {
