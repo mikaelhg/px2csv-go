@@ -16,13 +16,11 @@ type StatCubeWriter interface {
 	// the way data is laid out in a tight loop that has to avoid allocs.
 	WriteRow(stubs *[]*string, values *[][]byte,
 		valueLengths *[]int, stubWidth, headingWidth int)
+
+	WriteFooting()
 }
 
 type StatCubeCsvWriter struct {
-	Writer *bufio.Writer
-}
-
-type StatCubeParquetWriter struct {
 	Writer *bufio.Writer
 }
 
@@ -32,6 +30,9 @@ func (w *StatCubeCsvWriter) WriteHeading(stub, headingCsv []string) {
 	w.Writer.WriteString("\";\"")
 	w.Writer.WriteString(strings.Join(headingCsv, "\";\""))
 	w.Writer.WriteString("\"\n")
+}
+
+func (w *StatCubeCsvWriter) WriteFooting() {
 }
 
 func (w *StatCubeCsvWriter) WriteRow(stubs *[]*string, values *[][]byte,
@@ -56,10 +57,16 @@ func (w *StatCubeCsvWriter) WriteRow(stubs *[]*string, values *[][]byte,
 	w.Writer.WriteByte('\n')
 }
 
+type StatCubeParquetWriter struct {
+	counter       int32
+	Values        [][]float32
+	Writer        *bufio.Writer
+	ParquetWriter *file.Writer
+}
+
 func (w *StatCubeParquetWriter) WriteHeading(stub, headingCsv []string) {
 	const (
-		valueCount = 10000
-		pageSize   = 16384
+		pageSize = 16384
 	)
 	var (
 		props = parquet.NewWriterProperties(
@@ -70,8 +77,14 @@ func (w *StatCubeParquetWriter) WriteHeading(stub, headingCsv []string) {
 		sc, _ = schema.NewGroupNode("schema", parquet.Repetitions.Required, fieldList, -1)
 	)
 
-	writer := file.NewParquetWriter(w.Writer, sc, file.WithWriterProps(props))
-	rgWriter := writer.AppendBufferedRowGroup()
+	w.ParquetWriter = file.NewParquetWriter(w.Writer, sc, file.WithWriterProps(props))
+}
+
+func (w *StatCubeParquetWriter) writeBatch() {
+	const (
+		valueCount = 10000
+	)
+	rgWriter := w.ParquetWriter.AppendBufferedRowGroup()
 	cwr, _ := rgWriter.Column(0)
 	cw := cwr.(*file.Float32ColumnChunkWriter)
 	valuesIn := make([]float32, 0, valueCount)
@@ -80,9 +93,18 @@ func (w *StatCubeParquetWriter) WriteHeading(stub, headingCsv []string) {
 	}
 	cw.WriteBatch(valuesIn, nil, nil)
 	rgWriter.Close()
-	writer.Close()
+}
+
+func (w *StatCubeParquetWriter) WriteFooting() {
+	w.ParquetWriter.Close()
 }
 
 func (w *StatCubeParquetWriter) WriteRow(stubs *[]*string, values *[][]byte,
 	valueLengths *[]int, stubWidth, headingWidth int) {
+
+	w.counter += 1
+	if w.counter > 10000 {
+		w.counter = 1
+		w.writeBatch()
+	}
 }

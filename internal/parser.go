@@ -60,11 +60,12 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 	// and we'll want to avoid any heap allocations inside the parser loop.
 	// That's why we indulge with all this funky pointer arithmetic and
 	// pre-allocation.
+parser:
 	for {
 		c, err := reader.ReadByte()
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				return
+				break parser
 			} else {
 				panic(err)
 			}
@@ -74,7 +75,8 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 
 		} else if c == ' ' || c == '\n' || c == '\r' || c == ';' {
 			if bufLength > 0 {
-				values[currentValue] = buf[0:bufLength]
+				base := DataValueWidth * currentValue
+				values[currentValue] = buf[base : base+bufLength]
 				valueLengths[currentValue] = bufLength
 				bufLength = 0
 				currentValue += 1
@@ -91,6 +93,7 @@ func (p *Parser) ParseDataDense(reader *bufio.Reader) {
 		}
 	}
 
+	p.CubeWriter.WriteFooting()
 }
 
 func (p *Parser) ParseHeader(reader *bufio.Reader) {
