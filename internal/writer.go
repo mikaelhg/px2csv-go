@@ -20,10 +20,6 @@ type StatCubeCsvWriter struct {
 	Writer *bufio.Writer
 }
 
-func joinStringSlice(ss []string) string {
-	return strings.Join(ss, " ")
-}
-
 func (w *StatCubeCsvWriter) WriteHeading(stub []string, headingFlattened [][]string) {
 	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 	w.Writer.WriteString("\"")
@@ -34,6 +30,7 @@ func (w *StatCubeCsvWriter) WriteHeading(stub []string, headingFlattened [][]str
 }
 
 func (w *StatCubeCsvWriter) WriteFooting() {
+	// NOP
 }
 
 func (w *StatCubeCsvWriter) WriteRow(stubs *[]*string, values *[][]byte,
