@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"strings"
 )
 
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
@@ -25,36 +24,34 @@ func (p *Parser) Header(keyword string, language string, subkeys []string) []str
 	return nil
 }
 
-func joinStringSlice(ss []string) string {
-	return strings.Join(ss, " ")
-}
-
 func (p *Parser) valuesHeader(subkey string) []string {
 	return p.Header("VALUES", "", []string{subkey})
 }
 
-func (p *Parser) ParseDataDense(reader *bufio.Reader) {
-	stub := p.Header("STUB", "", []string{})
-	stubValues := MapXtoY(stub, p.valuesHeader)
-	stubFlattener := NewCartesianProduct(stubValues)
-	stubWidth := len(stub)
-
+func (p *Parser) denseHeading() ([][]string, int) {
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, p.valuesHeader)
 	headingFlattener := NewCartesianProduct(headingValues)
 	headingFlattened := headingFlattener.All()
-	headingWidth := len(headingFlattened)
-	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
+	return headingFlattened, len(headingFlattened)
+}
 
-	quotes := 0
-	bufLength := 0
-	currentValue := 0
+func (p *Parser) denseStub() ([]string, CartesianProduct, int) {
+	stub := p.Header("STUB", "", []string{})
+	stubValues := MapXtoY(stub, p.valuesHeader)
+	return stub, NewCartesianProduct(stubValues), len(stub)
+}
+
+func (p *Parser) ParseDataDense(reader *bufio.Reader) {
+	stub, stubFlattener, stubWidth := p.denseStub()
+	headingFlattened, headingWidth := p.denseHeading()
+	p.CubeWriter.WriteHeading(stub, headingFlattened)
+
+	base, bufLength, currentValue := 0, 0, 0
 	buf := make([]byte, headingWidth*DataValueWidth)
 	values := make([][]byte, headingWidth)
 	valueLengths := make([]int, headingWidth)
-	theseStubs := make([]*string, stubWidth)
-
-	p.CubeWriter.WriteHeading(stub, headingCsv)
+	currentStubs := make([]*string, stubWidth)
 
 	// This is the most performance-critical part of the whole program,
 	// and we'll want to avoid any heap allocations inside the parser loop.
@@ -70,12 +67,12 @@ parser:
 				panic(err)
 			}
 		}
+		base = DataValueWidth * currentValue
 		if c == '"' {
-			quotes += 1
+			continue parser
 
 		} else if c == ' ' || c == '\n' || c == '\r' || c == ';' {
 			if bufLength > 0 {
-				base := DataValueWidth * currentValue
 				values[currentValue] = buf[base : base+bufLength]
 				valueLengths[currentValue] = bufLength
 				bufLength = 0
@@ -83,12 +80,12 @@ parser:
 			}
 			if currentValue == headingWidth {
 				currentValue = 0
-				stubFlattener.NextP(&theseStubs)
-				p.CubeWriter.WriteRow(&theseStubs, &values,
+				stubFlattener.NextP(&currentStubs)
+				p.CubeWriter.WriteRow(&currentStubs, &values,
 					&valueLengths, stubWidth, headingWidth)
 			}
 		} else {
-			buf[bufLength+(DataValueWidth*currentValue)] = c
+			buf[base+bufLength] = c
 			bufLength += 1
 		}
 	}

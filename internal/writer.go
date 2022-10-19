@@ -10,7 +10,7 @@ import (
 )
 
 type StatCubeWriter interface {
-	WriteHeading(stub, headingCsv []string)
+	WriteHeading(stub []string, headingFlattened [][]string)
 
 	// Yes, the signature is a bit funny, but it's like this to optimize
 	// the way data is laid out in a tight loop that has to avoid allocs.
@@ -24,7 +24,12 @@ type StatCubeCsvWriter struct {
 	Writer *bufio.Writer
 }
 
-func (w *StatCubeCsvWriter) WriteHeading(stub, headingCsv []string) {
+func joinStringSlice(ss []string) string {
+	return strings.Join(ss, " ")
+}
+
+func (w *StatCubeCsvWriter) WriteHeading(stub []string, headingFlattened [][]string) {
+	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
 	w.Writer.WriteString("\"")
 	w.Writer.WriteString(strings.Join(stub, "\";\""))
 	w.Writer.WriteString("\";\"")
@@ -64,7 +69,7 @@ type StatCubeParquetWriter struct {
 	ParquetWriter *file.Writer
 }
 
-func (w *StatCubeParquetWriter) WriteHeading(stub, headingCsv []string) {
+func (w *StatCubeParquetWriter) WriteHeading(stub []string, headingFlattened [][]string) {
 	const (
 		pageSize = 16384
 	)
