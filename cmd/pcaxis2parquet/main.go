@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	pxFilename := flag.String("px", "", "PC-AXIS input file")
-	csvFilename := flag.String("csv", "", "CSV output file")
+	pxFilename := flag.String("px", "/dev/stdin", "PC-AXIS input file")
+	csvFilename := flag.String("csv", "/dev/stdout", "CSV output file")
 	flag.Parse()
 
 	inf, err := os.Open(*pxFilename)
@@ -26,7 +26,6 @@ func main() {
 	defer outf.Close()
 
 	reader, writer := bufio.NewReader(inf), bufio.NewWriter(outf)
-
 	cubeWriter := internal.StatCubeCsvWriter{Writer: writer}
 	pxParser := internal.Parser{CubeWriter: &cubeWriter}
 	pxParser.ParseHeader(reader)
