@@ -8,14 +8,14 @@ import (
 
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
 
-type Parser struct {
+type PxParser struct {
 	hps        HeaderParseState
 	row        RowAccumulator
 	headers    []PxHeaderRow
 	CubeWriter StatCubeWriter
 }
 
-func (p *Parser) Header(keyword string, language string, subkeys []string) []string {
+func (p *PxParser) Header(keyword string, language string, subkeys []string) []string {
 	for _, v := range p.headers {
 		if v.Equals(keyword, language, subkeys) {
 			return v.Values
@@ -24,11 +24,11 @@ func (p *Parser) Header(keyword string, language string, subkeys []string) []str
 	return nil
 }
 
-func (p *Parser) valuesHeader(subkey string) []string {
+func (p *PxParser) valuesHeader(subkey string) []string {
 	return p.Header("VALUES", "", []string{subkey})
 }
 
-func (p *Parser) denseHeading() ([][]string, int) {
+func (p *PxParser) denseHeading() ([][]string, int) {
 	heading := p.Header("HEADING", "", []string{})
 	headingValues := MapXtoY(heading, p.valuesHeader)
 	headingFlattener := NewCartesianProduct(headingValues)
@@ -36,13 +36,13 @@ func (p *Parser) denseHeading() ([][]string, int) {
 	return headingFlattened, len(headingFlattened)
 }
 
-func (p *Parser) denseStub() ([]string, CartesianProduct, int) {
+func (p *PxParser) denseStub() ([]string, CartesianProduct, int) {
 	stub := p.Header("STUB", "", []string{})
 	stubValues := MapXtoY(stub, p.valuesHeader)
 	return stub, NewCartesianProduct(stubValues), len(stub)
 }
 
-func (p *Parser) ParseDataDense(reader *bufio.Reader) {
+func (p *PxParser) ParseDataDense(reader *bufio.Reader) {
 	stub, stubFlattener, stubWidth := p.denseStub()
 	headingFlattened, headingWidth := p.denseHeading()
 	p.CubeWriter.WriteHeading(stub, headingFlattened)
@@ -93,7 +93,7 @@ parser:
 	p.CubeWriter.WriteFooting()
 }
 
-func (p *Parser) ParseHeader(reader *bufio.Reader) {
+func (p *PxParser) ParseHeader(reader *bufio.Reader) {
 	for {
 		c, err := reader.ReadByte()
 		if err != nil {
@@ -110,7 +110,7 @@ func (p *Parser) ParseHeader(reader *bufio.Reader) {
 }
 
 // TIMEVAL and HIERARCHY not yet supported beyond passing them through.
-func (p *Parser) ParseHeaderCharacter(c byte) (stop bool, err error) {
+func (p *PxParser) ParseHeaderCharacter(c byte) (stop bool, err error) {
 	inQuotes := p.hps.Quotes%2 == 1
 	inParenthesis := p.hps.ParenthesisOpen > p.hps.ParenthesisClose
 	inKey := p.hps.Semicolons == p.hps.Equals
