@@ -9,7 +9,7 @@ import (
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
 
 type PxParser struct {
-	hps        HeaderParseState
+	state      PxParserState
 	row        RowAccumulator
 	headers    []PxHeaderRow
 	CubeWriter StatCubeWriter
@@ -48,8 +48,7 @@ func (p *PxParser) ParseDataDense(reader *bufio.Reader) {
 	p.CubeWriter.WriteHeading(stub, headingFlattened)
 
 	base, bufLength, currentValue := 0, 0, 0
-	buf := make([]byte, headingWidth*DataValueWidth)
-	values := make([][]byte, headingWidth)
+	buffer := make([]byte, headingWidth*DataValueWidth)
 	valueLengths := make([]int, headingWidth)
 	currentStubs := make([]*string, stubWidth)
 
@@ -73,7 +72,6 @@ parser:
 
 		} else if c == ' ' || c == '\n' || c == '\r' || c == ';' {
 			if bufLength > 0 {
-				values[currentValue] = buf[base : base+bufLength]
 				valueLengths[currentValue] = bufLength
 				bufLength = 0
 				currentValue += 1
@@ -81,11 +79,11 @@ parser:
 			if currentValue == headingWidth {
 				currentValue = 0
 				stubFlattener.NextP(&currentStubs)
-				p.CubeWriter.WriteRow(&currentStubs, &values,
+				p.CubeWriter.WriteRow(&currentStubs, &buffer,
 					&valueLengths, stubWidth, headingWidth)
 			}
 		} else {
-			buf[base+bufLength] = c
+			buffer[base+bufLength] = c
 			bufLength += 1
 		}
 	}
@@ -111,16 +109,16 @@ func (p *PxParser) ParseHeader(reader *bufio.Reader) {
 
 // TIMEVAL and HIERARCHY not yet supported beyond passing them through.
 func (p *PxParser) ParseHeaderCharacter(c byte) (stop bool, err error) {
-	inQuotes := p.hps.Quotes%2 == 1
-	inParenthesis := p.hps.ParenthesisOpen > p.hps.ParenthesisClose
-	inKey := p.hps.Semicolons == p.hps.Equals
-	inLanguage := inKey && p.hps.SquarebracketOpen > p.hps.SquarebracketClose
+	inQuotes := p.state.Quotes%2 == 1
+	inParenthesis := p.state.ParenthesisOpen > p.state.ParenthesisClose
+	inKey := p.state.Semicolons == p.state.Equals
+	inLanguage := inKey && p.state.SquarebracketOpen > p.state.SquarebracketClose
 	inSubkey := inKey && inParenthesis
 
-	p.hps.Count += 1
+	p.state.Count += 1
 
 	if c == '"' {
-		p.hps.Quotes += 1
+		p.state.Quotes += 1
 
 	} else if (c == '\n' || c == '\r') && inQuotes {
 		return true, errors.New("there can't be newlines inside quoted strings")
@@ -129,27 +127,27 @@ func (p *PxParser) ParseHeaderCharacter(c byte) (stop bool, err error) {
 		return false, nil
 
 	} else if c == '[' && inKey && !inQuotes {
-		p.hps.SquarebracketOpen += 1
+		p.state.SquarebracketOpen += 1
 
 	} else if c == ']' && inKey && !inQuotes {
-		p.hps.SquarebracketClose += 1
+		p.state.SquarebracketClose += 1
 
 	} else if c == '(' && inKey && !inQuotes {
-		p.hps.ParenthesisOpen += 1
+		p.state.ParenthesisOpen += 1
 
 	} else if c == '(' && !inKey && !inQuotes {
 		// TLIST opening quote
-		p.hps.ParenthesisOpen += 1
+		p.state.ParenthesisOpen += 1
 		p.row.Value += string(c)
 
 	} else if c == ')' && inKey && !inQuotes {
-		p.hps.ParenthesisClose += 1
+		p.state.ParenthesisClose += 1
 		p.row.Subkeys = append(p.row.Subkeys, p.row.Subkey)
 		p.row.Subkey = ""
 
 	} else if c == ')' && !inKey && !inQuotes {
 		// TLIST closing quote
-		p.hps.ParenthesisClose += 1
+		p.state.ParenthesisClose += 1
 		p.row.Value += string(c)
 
 	} else if c == ',' && inSubkey && !inQuotes {
@@ -167,7 +165,7 @@ func (p *PxParser) ParseHeaderCharacter(c byte) (stop bool, err error) {
 		if p.row.Keyword == "DATA" {
 			return true, nil
 		}
-		p.hps.Equals += 1
+		p.state.Equals += 1
 
 	} else if c == ';' && inKey && !inQuotes {
 		return true, errors.New("found a semicolon without a matching equals sign, value terminator without keyword terminator")
@@ -176,7 +174,7 @@ func (p *PxParser) ParseHeaderCharacter(c byte) (stop bool, err error) {
 		if len(p.row.Value) > 0 {
 			p.row.Values = append(p.row.Values, p.row.Value)
 		}
-		p.hps.Semicolons += 1
+		p.state.Semicolons += 1
 		p.headers = append(p.headers, p.row.ToRow())
 		p.row = RowAccumulator{}
 		return false, nil

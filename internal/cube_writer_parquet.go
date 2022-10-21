@@ -50,7 +50,7 @@ func (w *StatCubeParquetWriter) WriteFooting() {
 	w.ParquetWriter.Close()
 }
 
-func (w *StatCubeParquetWriter) WriteRow(stubs *[]*string, values *[][]byte,
+func (w *StatCubeParquetWriter) WriteRow(stubs *[]*string, buffer *[]byte,
 	valueLengths *[]int, stubWidth, headingWidth int) {
 
 	w.counter += 1

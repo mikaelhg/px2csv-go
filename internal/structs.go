@@ -31,7 +31,7 @@ func (r *RowAccumulator) ToRow() PxHeaderRow {
 	}
 }
 
-type HeaderParseState struct {
+type PxParserState struct {
 	Count              int
 	Quotes             int
 	Semicolons         int
