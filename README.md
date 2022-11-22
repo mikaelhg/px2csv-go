@@ -97,3 +97,25 @@ Attaching 1 probe...
 [2K, 4K)               1 |                                                    |
 [4K, 8K)           56545 |@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@|
 ```
+
+```
+hyperfine './bin/px2csv-linux-amd64 --px ./data/statfin_vtp_pxt_124l.px --csv /dev/null' '/home/mikael/.sdkman/candidates/java/22.3.r19-grl/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null' '/home/mikael/.sdkman/candidates/java/19.0.1-amzn/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null'
+
+Benchmark 1: ./bin/px2csv-linux-amd64 --px ./data/statfin_vtp_pxt_124l.px --csv /dev/null
+  Time (mean ± σ):      1.279 s ±  0.015 s    [User: 1.229 s, System: 0.054 s]
+  Range (min … max):    1.262 s …  1.317 s    10 runs
+ 
+Benchmark 2: /home/mikael/.sdkman/candidates/java/22.3.r19-grl/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null
+  Time (mean ± σ):      1.346 s ±  0.012 s    [User: 1.748 s, System: 0.181 s]
+  Range (min … max):    1.328 s …  1.368 s    10 runs
+ 
+Benchmark 3: /home/mikael/.sdkman/candidates/java/19.0.1-amzn/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null
+  Time (mean ± σ):      1.499 s ±  0.013 s    [User: 1.788 s, System: 0.124 s]
+  Range (min … max):    1.484 s …  1.520 s    10 runs
+ 
+Summary
+  './bin/px2csv-linux-amd64 --px ./data/statfin_vtp_pxt_124l.px --csv /dev/null' ran
+    1.05 ± 0.02 times faster than '/home/mikael/.sdkman/candidates/java/22.3.r19-grl/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null'
+    1.17 ± 0.02 times faster than '/home/mikael/.sdkman/candidates/java/19.0.1-amzn/bin/java -jar ../px2csv-java/build/libs/px2csv.jar ./data/statfin_vtp_pxt_124l.px /dev/null'
+
+```
