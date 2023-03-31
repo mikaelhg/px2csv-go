@@ -3,6 +3,8 @@ package internal
 import (
 	"bufio"
 	"strings"
+
+	"github.com/samber/lo"
 )
 
 type StatCubeWriter interface {
@@ -21,7 +23,7 @@ type StatCubeCsvWriter struct {
 }
 
 func (w *StatCubeCsvWriter) WriteHeading(stub []string, headingFlattened [][]string) {
-	headingCsv := MapXtoY(headingFlattened, joinStringSlice)
+	headingCsv := lo.Map(headingFlattened, joinStringSlice)
 	w.Writer.WriteString("\"")
 	w.Writer.WriteString(strings.Join(stub, "\";\""))
 	w.Writer.WriteString("\";\"")

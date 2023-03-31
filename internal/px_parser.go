@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"io"
+
+	"github.com/samber/lo"
 )
 
 const DataValueWidth = 128 // max width of 32 bit float string in bytes
@@ -24,13 +26,13 @@ func (p *PxParser) Header(keyword string, language string, subkeys []string) []s
 	return nil
 }
 
-func (p *PxParser) valuesHeader(subkey string) []string {
+func (p *PxParser) valuesHeader(subkey string, _ int) []string {
 	return p.Header("VALUES", "", []string{subkey})
 }
 
 func (p *PxParser) denseHeading() ([][]string, int) {
 	heading := p.Header("HEADING", "", []string{})
-	headingValues := MapXtoY(heading, p.valuesHeader)
+	headingValues := lo.Map(heading, p.valuesHeader)
 	headingFlattener := NewCartesianProduct(headingValues)
 	headingFlattened := headingFlattener.All()
 	return headingFlattened, len(headingFlattened)
@@ -38,7 +40,7 @@ func (p *PxParser) denseHeading() ([][]string, int) {
 
 func (p *PxParser) denseStub() ([]string, CartesianProduct, int) {
 	stub := p.Header("STUB", "", []string{})
-	stubValues := MapXtoY(stub, p.valuesHeader)
+	stubValues := lo.Map(stub, p.valuesHeader)
 	return stub, NewCartesianProduct(stubValues), len(stub)
 }
 
