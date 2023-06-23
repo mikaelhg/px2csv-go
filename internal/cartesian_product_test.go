@@ -27,23 +27,23 @@ func TestCartesianProductPointer(t *testing.T) {
 		{"a", "b", "c"},
 		{"1", "2", "3"},
 	}
-	expected_v := [][]string{
+	expectedValues := [][]string{
 		{"a", "1"}, {"a", "2"}, {"a", "3"},
 		{"b", "1"}, {"b", "2"}, {"b", "3"},
 		{"c", "1"}, {"c", "2"}, {"c", "3"},
 	}
-	expected := make([][]*string, len(expected_v))
-	for i := 0; i < len(expected_v); i++ {
-		expected[i] = make([]*string, len(expected_v[i]))
-		for j := 0; j < len(expected_v[i]); j++ {
-			expected[i][j] = &(expected_v[i][j])
+	expectedPointers := make([][]*string, len(expectedValues))
+	for i := 0; i < len(expectedValues); i++ {
+		expectedPointers[i] = make([]*string, len(expectedValues[i]))
+		for j := 0; j < len(expectedValues[i]); j++ {
+			expectedPointers[i][j] = &(expectedValues[i][j])
 		}
 	}
 	c := internal.NewCartesianProduct(data)
 	values := make([]*string, len(data))
-	for i := 0; i < len(expected); i++ {
+	for i := 0; i < len(expectedPointers); i++ {
 		stop := c.NextP(&values)
-		assert.True(t, i < len(expected)-1 != stop, "stop on the last step")
-		assert.Equal(t, values, expected[i])
+		assert.True(t, i < len(expectedPointers)-1 != stop, "stop on the last step")
+		assert.Equal(t, values, expectedPointers[i])
 	}
 }

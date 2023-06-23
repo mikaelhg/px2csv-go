@@ -2,52 +2,42 @@ package internal
 
 import (
 	"bufio"
+	"bytes"
 
-	"github.com/apache/arrow/go/v11/parquet"
-	"github.com/apache/arrow/go/v11/parquet/file"
-	"github.com/apache/arrow/go/v11/parquet/schema"
+	parquet "github.com/segmentio/parquet-go"
 )
 
 type StatCubeParquetWriter struct {
-	counter       int32
-	Values        [][]float32
-	Writer        *bufio.Writer
-	ParquetWriter *file.Writer
+	counter int32
+	Values  [][]float32
+	Writer  *bufio.Writer
+	Storage bytes.Buffer
+}
+
+func ParquetWriter() *StatCubeParquetWriter {
+	return &StatCubeParquetWriter{
+		counter: 0,
+	}
 }
 
 func (w *StatCubeParquetWriter) WriteHeading(stub []string, headingFlattened [][]string) {
-	const (
-		pageSize = 16384
-	)
-	var (
-		props = parquet.NewWriterProperties(
-			parquet.WithDictionaryDefault(false), parquet.WithDataPageSize(pageSize))
-		fieldList = schema.FieldList{
-			schema.NewFloat32Node("col", parquet.Repetitions.Required, -1),
-		}
-		sc, _ = schema.NewGroupNode("schema", parquet.Repetitions.Required, fieldList, -1)
-	)
+	node := parquet.String()
+	node = parquet.Encoded(node, &parquet.RLEDictionary)
 
-	w.ParquetWriter = file.NewParquetWriter(w.Writer, sc, file.WithWriterProps(props))
+	g := parquet.Group{}
+	g["mystring"] = node
+
+	schema := parquet.NewSchema("test", g)
+
+	rows := []parquet.Row{[]parquet.Value{parquet.ValueOf("hello").Level(0, 0, 0)}}
+
+	_, _ = schema, rows
 }
 
 func (w *StatCubeParquetWriter) writeBatch() {
-	const (
-		valueCount = 10000
-	)
-	rgWriter := w.ParquetWriter.AppendBufferedRowGroup()
-	cwr, _ := rgWriter.Column(0)
-	cw := cwr.(*file.Float32ColumnChunkWriter)
-	valuesIn := make([]float32, 0, valueCount)
-	for i := 0; i < valueCount; i++ {
-		valuesIn = append(valuesIn, float32((i%100)+1))
-	}
-	cw.WriteBatch(valuesIn, nil, nil)
-	rgWriter.Close()
 }
 
 func (w *StatCubeParquetWriter) WriteFooting() {
-	w.ParquetWriter.Close()
 }
 
 func (w *StatCubeParquetWriter) WriteRow(stubs *[]*string, buffer *[]byte,

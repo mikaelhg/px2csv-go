@@ -9,17 +9,17 @@ import (
 )
 
 func main() {
-	pxFilename := flag.String("px", "/dev/stdin", "PC-AXIS input file")
-	csvFilename := flag.String("csv", "/dev/stdout", "CSV output file")
+	inputFilename := flag.String("px", "/dev/stdin", "PC-AXIS input file")
+	outputFilename := flag.String("csv", "/dev/stdout", "CSV output file")
 	flag.Parse()
 
-	inf, err := os.Open(*pxFilename)
+	inf, err := os.Open(*inputFilename)
 	if err != nil {
 		panic(err)
 	}
 	defer inf.Close()
 
-	outf, err := os.OpenFile(*csvFilename, os.O_WRONLY|os.O_CREATE, 0644)
+	outf, err := os.OpenFile(*outputFilename, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -30,5 +30,8 @@ func main() {
 	pxParser := internal.PxParser{CubeWriter: &cubeWriter}
 	pxParser.ParseHeader(reader)
 	pxParser.ParseDataDense(reader)
-	writer.Flush()
+	err = writer.Flush()
+	if err != nil {
+		panic(err)
+	}
 }
