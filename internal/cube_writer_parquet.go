@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 
-	parquet "github.com/segmentio/parquet-go"
+	parquet "github.com/parquet-go/parquet-go"
 )
 
 type StatCubeParquetWriter struct {

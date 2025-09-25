@@ -1,6 +1,6 @@
 package internal
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 type PxHeaderRow struct {
 	Keyword  string
