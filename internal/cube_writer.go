@@ -5,18 +5,9 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
+
+	"code.mikael.io/stat/pxgo/parser"
 )
-
-type StatCubeWriter interface {
-	WriteHeading(stub []string, headingFlattened [][]string)
-
-	// Yes, the signature is a bit funny, but it's like this to optimize
-	// the way data is laid out in a tight loop that has to avoid allocs.
-	WriteRow(stubs *[]*string, buffer *[]byte,
-		valueLengths *[]int, stubWidth, headingWidth int)
-
-	WriteFooting()
-}
 
 type StatCubeCsvWriter struct {
 	Writer *bufio.Writer
@@ -48,8 +39,8 @@ func (w *StatCubeCsvWriter) WriteRow(stubs *[]*string, buffer *[]byte,
 	}
 	w.Writer.WriteByte('"')
 	w.Writer.WriteByte(';')
-	for i := 0; i < headingWidth; i++ {
-		offset := DataValueWidth * i
+	for i := range headingWidth {
+		offset := parser.DataValueWidth * i
 		w.Writer.Write((*buffer)[offset : offset+(*valueLengths)[i]])
 		if i < headingWidth-1 {
 			w.Writer.WriteByte(';')

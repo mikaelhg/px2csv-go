@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 
+	"code.mikael.io/stat/pxgo/parser"
 	"github.com/mikaelhg/gpcaxis/internal"
 )
 
@@ -27,9 +28,15 @@ func main() {
 
 	reader, writer := bufio.NewReader(inf), bufio.NewWriter(outf)
 	cubeWriter := internal.StatCubeCsvWriter{Writer: writer}
-	pxParser := internal.PxParser{CubeWriter: &cubeWriter}
-	pxParser.ParseHeader(reader)
-	pxParser.ParseDataDense(reader)
+	pxParser := parser.PxParser{CubeWriter: &cubeWriter}
+	err = pxParser.ParseHeader(reader)
+	if err != nil {
+		panic(err)
+	}
+	err = pxParser.ParseDataDense(reader)
+	if err != nil {
+		panic(err)
+	}
 	err = writer.Flush()
 	if err != nil {
 		panic(err)
