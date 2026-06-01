@@ -3,7 +3,7 @@ module github.com/mikaelhg/gpcaxis
 go 1.25.1
 
 require (
-	github.com/parquet-go/parquet-go v0.29.0
+	github.com/parquet-go/parquet-go v0.30.1
 	github.com/samber/lo v1.53.0
 	github.com/stretchr/testify v1.11.1
 )
