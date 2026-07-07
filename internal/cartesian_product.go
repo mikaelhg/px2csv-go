@@ -15,7 +15,7 @@ func NewCartesianProduct(input [][]string) CartesianProduct {
 		lengths:  make([]int, length),
 		lists:    input,
 	}
-	for i := 0; i < length; i++ {
+	for i := range length {
 		ret.lengths[i] = len(input[i])
 	}
 	return ret
